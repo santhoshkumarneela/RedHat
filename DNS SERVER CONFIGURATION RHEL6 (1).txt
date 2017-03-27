@@ -1,0 +1,153 @@
+###DNS SERVER CONFIGURATION RHEL6###
+
+1.Make hostname, IPADDRESS , GATEWAY PERMANENT
+# cat ifcfg-eth0
+DEVICE="eth0"
+BOOTPROTO="static"
+HWADDR="00:0C:29:2A:FD:11"
+ONBOOT="yes"
+USERCTL=no
+IPADDR=192.168.0.100
+NETMASK=255.255.255.0
+GATEWAY=192.168.0.1
+DNS1=192.168.0.100
+# cat /etc/sysconfig/network
+NETWORKING=yes
+HOSTNAME=linuxprod.training.com
+GATEWAY=192.168.0.1
+
+2.Add entry in /etc/hosts
+# cat /etc/hosts
+127.0.0.1   localhost localhost.localdomain localhost4 localhost4.localdomai          n4
+::1         localhost localhost.localdomain localhost6 localhost6.localdomai          n6
+192.168.0.100 linuxprod.train.com  linuxprod
+
+3.Add entry in /etc/resolv.conf
+# cat /etc/resolv.conf
+search linux-prod.train.com
+nameserver 192.168.0.100
+
+4.Restart Network services
+#service network restart
+
+5.Now install bind  packages
+#yum install bind-*
+
+
+6.Take backup of /etc/named.conf
+#cp /etc/named.conf /etc/named.conf.bkp
+
+7.Now modify /etc/named.conf and find difference
+listen-on port 53 { 192.168.0.100; };
+allow-query     { any; };
+
+#diff /etc/named.conf /etc/named.conf.bkp
+11c11
+<       listen-on port 53 { 192.168.0.100; };
+---
+>       listen-on port 53 { 127.0.0.1; };
+17c17
+<       allow-query     { any; };
+---
+>       allow-query     { localhost; };
+
+8.Now modify /etc/named.rfc1912.zones
+#cp /etc/named.rfc1912.zones /etc/named.rfc1912.zones.bkp
+zone "train.com" IN {
+        type master;
+        file "forward.zone";
+        allow-update { none; };
+zone "0.168.192.in-addr.arpa" IN {
+        type master;
+        file "reverse.zone";
+        allow-update { none; };
+
+
+diff /etc/named.rfc1912.zones /etc/named.rfc1912.zones.bkp
+13c13
+< zone "train.com" IN {
+---
+> zone "localhost.localdomain" IN {
+15c15
+<       file "forward.zone";
+---
+>       file "named.localhost";
+31c31
+< zone "0.168.192.in-addr.arpa" IN {
+---
+> zone "1.0.0.127.in-addr.arpa" IN {
+33c33
+<       file "reverse.zone";
+---
+>       file "named.loopback";
+
+9.Now create forward.zone & reverse.zone files from localhost&loopback
+cp -p named.localhost forward.zone
+cp -p named.loopback reverse.zone
+cp forward.zone forward.zone.bkp
+cp reverse.zone reverse.zone.bkp
+Now modify forward.zone & reverse.zone
+#diff forward.zone forward.zone.bkp
+2,3c2
+< @     IN SOA  linux-prod.train.com. root.linux-prod.train.com. (
+<
+---
+> @     IN SOA  @ rname.invalid. (
+9,10c8,10
+<       IN NS   linux-prod.train.com.
+< linux-prod    IN A    192.168.0.100
+---
+>       NS      @
+>       A       127.0.0.1
+>       AAAA    ::1
+
+#diff reverse.zone reverse.zone.bkp
+2c2
+< @     IN SOA  linux-prod.train.com.   root.linux-prod.train.com. (
+---
+> @     IN SOA  @ rname.invalid. (
+8,9c8,11
+<       IN NS   linux-prod.train.com.
+< 100   IN PTR  linux-prod.train.com.
+---
+>       NS      @
+>       A       127.0.0.1
+>       AAAA    ::1
+>       PTR     localhost.
+
+Now test the forward.zone & reverse.zone
+[root@linux-prod named]# named-checkzone train.com forward.zone
+zone train.com/IN: loaded serial 0
+OK
+[root@linux-prod named]# named-checkzone train.com reverse.zone
+zone train.zone/IN: loaded serial 0
+OK
+
+
+10.Now start Named service
+#service named start
+
+11.Now verify with 
+#dig linux-prod.train.com
+#dig -x 192.168.0.100
+#nslookup linux-prod.train.com
+#nslookup 192.168.0.100
+
+
+Technical Terms
+####A start of authority (SOA) record is information stored in a domain name system (DNS) 
+zone about that zone and about other DNS records. 
+A DNS zone is the part of a domain for which an individual DNS server is responsible. 
+Each zone contains a single SOA record.
+
+####NS records specify the servers which are providing DNS services for that domain name. 
+The A records point host names (such as www, ftp, mail) to one or more IP addresses. 
+It is important to have both NS and A record in zone if you need to delegate 
+sub-zone to different 
+DNS server
+
+##PTR###POINTER RECORDs
+You can think of the PTR record as an opposite of the A record. 
+While the A record points a domain name to an IP address, 
+the PTR record resolves the IP address to a domain/hostname. 
+PTR records are used for the reverse DNS (Domain Name System) lookup.

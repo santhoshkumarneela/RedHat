@@ -1,0 +1,85 @@
+#DHCP SERVER RHEL6
+(Both(server/end) Network Adapters should be in VMnet0)
+1.Assign IP to the server
+/etc/sysconfig/network-scripts/ifcfg-eth0
+or
+setup
+
+2.Install the Package
+rpm -qa dhcp
+yum list dhcp
+yum install dhcp*
+
+2.Look for the DHCP Config file with rpm -qc(query,config)
+rpm -qc dhcp
+
+3.Vi /etc/dhcp/dhcpd.conf
+subnet 192.168.0.0 netmask 255.255.255.0 {
+range 192.168.0.101 192.168.0.160;
+  option domain-name-servers ns1.internal.example.org;
+  option domain-name "internal.example.org";
+  #option routers 10.5.5.1;
+  #option broadcast-address 10.5.5.31;
+default-lease-time 600;
+max-lease-time 3200;
+}
+
+
+4.Verify the configuration file 
+#service dhcpd configtest
+syntax : ok
+
+5.Start the dhcp services on Server end ..no need in client end
+#service dhcpd start
+#chkconfig dhcpd on
+
+6.You can verify the client info
+[root@linux-prod dhcp]# cat /var/lib/dhcpd/dhcpd.leases
+# The format of this file is documented in the dhcpd.leases(5) manual page.
+# This lease file was written by isc-dhcp-4.1.1-P1
+
+server-duid "\000\001\000\001 b\242\217\000\014)*\375\021";
+
+[root@linux-prod dhcp]#
+
+7.Go to client machine
+Restart NetworkManager service
+#service NetworkManager restart
+or
+#service network restart
+#reboot
+#ifdown eth0
+#ifup eth0
+
+8.Now check with ifconfig -a
+
+9.Now go to DHCP Server and check
+cat /var/lib/dhcpd/dhcpd.leases
+
+you can see MAC Address of client machine
+
+server-duid "\000\001\000\001 \031#\013\00
+
+lease 192.168.0.102 {
+  starts 1 2017/01/23 20:40:21;
+  ends 1 2017/01/23 20:50:21;
+  cltt 1 2017/01/23 20:40:21;
+  binding state active;
+  next binding state free;
+  hardware ethernet 00:0c:29:92:6f:18;
+}
+
+
+############Linux Client configuration
+
+[root@mylinz ~]# cat /etc/sysconfig/network-scripts/ifcfg-eth0
+DEVICE="eth0"
+NM_CONTROLLED="yes"
+ONBOOT="yes"
+HWADDR=00:0C:29:27:0E:8A
+TYPE=Ethernet
+BOOTPROTO=dhcp
+DEFROUTE=yes
+IPV4_FAILURE_FATAL=yes
+IPV6INIT=no
+[root@mylinz ~]# 

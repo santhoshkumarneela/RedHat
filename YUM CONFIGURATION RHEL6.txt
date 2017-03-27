@@ -1,0 +1,41 @@
+YUM CONFIGURATION RHEL6
+
+1.mount the cd rom
+#mount /dev/cdrom /media
+
+2.cd /media/Packages
+
+3.install the packages
+#rpm -ivh vsftpd*
+#rpm -ivh deltarpm*
+#rpm -ivh python-deltarpm*
+#rpm -ivh createrepo*
+
+4.mkdir -p /Repo
+
+5.copy packages
+#cp -rvf Packages/ RPM-GPG-KEY-redhat-release /Repo
+
+6.Create database
+createrepo --database /Repo/Packages/
+
+7.cd /etc/yum.repos.d
+[root@localhost yum.repos.d]# cat ashok.repo
+[ashok]
+name=Local Repository
+baseurl=file:///Repo/Packages
+enabled=1
+gpgcheck=1
+gpgkey=file:///Repo/RPM-GPG-KEY-redhat-release
+
+8.Test YUM
+#yum repolist
+#yum install -y telnet*
+
+
+
+
+
+harshil.barot@gmail.com
+joyalpatel17@gmail.com
+nskumar923@gmail.com

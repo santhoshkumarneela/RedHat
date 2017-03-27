@@ -1,0 +1,80 @@
+Introduction
+Bonding (or channel bonding) is a technology enabled by the Linux kernal and Red Hat Enterprise Linux, 
+that allows administrators to combine two or more network interfaces to form a single, logical "bonded" 
+interface for redundancy or increased throughput. The behavior of the bonded interfaces depends upon the mode; 
+generally speaking, modes provide either hot standby or load balancing services. Additionally, they may provide l
+ink-integrity monitoring.
+
+This article describes the configuration methods of bonding on Red Hat Enterprise Linux 3, Red Hat Enterprise Linux  4 
+and Red Hat Enterprise Linux 5.
+
+
+Configuring bonded devices on Red Hat Enterprise Linux 5
+Single bonded device on RHEL5
+
+1.Add 2 NIC's to the Server ex eth0 & eth1
+#dmesg | grep eth
+#ethtool eth0
+#ethtool eth2
+Above commands we need to check "Link detected yes"
+
+2.To configure the bond0 device with the network interface eth0 and eth1, perform the following steps:
+  a.Add the following line to /etc/modprobe.conf:
+   alias bond0 bonding
+  b.Create the channel bonding interface file  ifcfg-bond0 in the /etc/sysconfig/network-scripts/ directory:
+# cat /etc/sysconfig/network-scripts/ifcfg-bond0
+DEVICE=bond0
+IPADDR=192.168.0.100
+NETMASK=255.255.255.0
+USERCTL=no
+BOOTPROTO=none
+ONBOOT=yes
+BONDING_OPTS="mode=0 miimon=100"
+#BONDING_OPTS="miimon=100 mode=balance-tlb"
+
+Note:
+*Configure the bonding parameters in the file /etc/sysconfig/network-scripts/ifcfg-bond0, 
+as above, BONDING_OPTS="mode=0 miimon=100".
+*       The behavior of the bonded interfaces depends upon the mode. 
+The mode 0 is the default value, which causes bonding to set all slaves of an active-backup bond 
+to the same MAC address at enslavement time. For more information about the bonding modes, 
+refer to The bonding modes supported in Red Hat Enterprise Linux.
+
+4.Configure the ethernet interface in the file /etc/sysconfig/network-scripts/ifcfg-eth0.  
+Both eth0 and eth1 should look like the following example:
+
+DEVICE=eth0
+BOOTPROTO=none
+#HWADDR=00:0c:29:5b:61:ac
+ONBOOT=yes
+MASTER=bond0
+SLAVE=yes
+USERCTL=no
+
+DEVICE=eth2
+BOOTPROTO=none
+#HWADDR=00:0c:29:5b:61:b6
+ONBOOT=yes
+MASTER=bond0
+SLAVE=yes
+USERCTL=no
+
+/etc/modprobe.conf -redhat 5
+/etc/modprobe.d/bonding.conf- redhat 6
+
+Note:
+*Replace <N> with the numerical value for the interface, such as 0 and 1 in this example. 
+Replace the HWADDR value with the MAC for the interface.
+*       Red Hat suggest that configure the MAC address of the ethernet card into the file 
+/etc/sysconfig/network-scripts/ifcfg-eth<N>.
+
+4.Restart the network service:
+#service network restart
+
+5.Test bonding now
+#ifconfig -a
+#ping <ip>
+5.In order to check the bonding status, check the following file:
+# cat /proc/net/bonding/bond0
+# cat /sys/class/net/bond0/bonding/mode
+# cat /etc/modprobe.d/bonding.conf

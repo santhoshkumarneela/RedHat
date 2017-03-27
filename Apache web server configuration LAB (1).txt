@@ -1,0 +1,100 @@
+Apache web server configuration LAB
+
+
+Step1:Install Apache server Packages & Verify
+#yum install httpd*
+#yum list httpd
+#yum list all
+
+Step2: Starting & Stoping Apache Service
+
+#/etc/init.d/httpd status
+#/etc/init.d/httpd start/restart/stop
+#service httpd status
+#service httpd start/stop
+
+Step3:Enable the service run at boot time
+#chkconfig --level 35 httpd on
+
+Step4: Configuring Apache server
+CONFIGURATION FILE: /etc/httpd/conf/httpd.conf
+
+ServerRoot "/etc/httpd"
+Serverip: 192.168.0.249
+Servername:Server
+       
+
+Now go to the default configuration file
+#ls -lrt /etc/httpd/conf/httpd.conf
+<VirtualHost 192.168.0.249:80>
+         ServerAdmin root@Server
+         DocumentRoot /var/www/html
+         DirectoryIndex linuxman.html
+</VirtualHost>
+
+Step6: Verify the configuration For testing
+#httpd -t
+
+Step7:create html page
+#cd /var/www/html
+#vi linuxman.html
+Welcome to linux classes
+
+Step8: Restart httpd service 
+#service httpd restart
+
+Step9:Now go to host site in browser
+http://192.168.0.249
+
+Step10: Now create share dir under /var/www/html
+#cd /var/www/html
+#mkdir share
+
+#vi /etc/httpd/conf/httpd.conf
+      <Directory */var/www/html/share*>
+      Options Indexes
+      Order Allow,Deny
+      Allow from all
+</Directory>
+:wq
+
+
+<VirtualHost 192.168.0.101>
+         ServerAdmin root@Server
+         DocumentRoot /var/www/html
+         DirectoryIndex linuxman.html
+</VirtualHost>
+
+#service httpd restart
+cd share/
+touch class1 class2 class3
+
+Now go to browser and type.now you can see shared files
+
+192.168.0.249/share
+
+
+If you want to set the security permissions
+Now go to configuration file
+vi /etc/httpd/conf/httpd.conf
+   AllowOverride Authconfig
+:wq
+
+cd share/
+vi .htaccess
+AuthName "Secure Site"
+AuthType basic
+AuthUserFile /etc/httpd/htpass
+require valid-user
+:wq
+
+We need to create user for authentication
+#useradd linux1
+#passwd linux1
+abc12def
+abc12def
+
+Now run the command
+#htpasswd -c /etc/httpd/htpass linux1
+set passwd
+ #service httpd restart
