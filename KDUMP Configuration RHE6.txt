@@ -1,0 +1,43 @@
+kdump configuration-Core dump Analysis
+
+1.Install the kdump packages
+yum --enablerepo=debug install kexec-tools crash kernel-debug kernel-debuginfo-'uname -r'
+
+2.Edit the /etc/kdump.conf to set path for dump location
+ext4 /dev/sdb1
+
+3.Update CrashKernel Parameter /boot/grub/grub.conf
+core_collector makedumpfile -c -d 17
+crashkernel=128M@32M
+###
+ram size  crashkernel parameter	
+>0GB	      128MB	   
+>2GB	      256MB	   
+>6GB	      512MB	   
+>8GB	      768MB
+
+4.Reboot the system
+#init 6
+
+5.Check status of kdump & start it to Operational
+
+#service kdump start
+#service kdump status
+Kdump is operational
+chkconfig kdump on 
+
+6.Test the core dump-To force the Linux kernel to crash
+#cat /proc/sys/kernel/sysrq - (To check sysrq is enabled)
+0
+echo 1 > /proc/sys/kernel/sysrq - (To enable sysrq)
+echo s > /proc/sysrq-trigger      (s- emergency sync)
+echo c > /proc/sysrq-trigger      (c- crash)
+
+7.After server is up go to path to check vmcore file
+
+8.Analyzing the Core Dump
+https://access.redhat.com/documentation/en-US/Red_Hat_Enterprise_Linux/6/html/Deployment_Guide/s1-kdump-crash.html
+
+
+gpasswd -r <groupname>
+
