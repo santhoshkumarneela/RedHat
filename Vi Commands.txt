@@ -1,0 +1,35 @@
+i - Insert
+x - delete
+ESC - enter command mode
+:wq! - save & quit
+:q! - quit
+u - undo
+zz - save File $ quit
+cw - To Replace
+o - To insert a new line like Enter
+j - join lines
+$a - append text
+$ - End of line
+^ - Begining of the Line
+1G - Top of the Document
+G - Bottom of the Document
+<n>G - Go to the line <n>
+^F - Page Forward
+^B - page Backward
+W - word Forward
+B - Word Backward
+dnl - delete number of letters in a word
+dw - delete word
+dd - delete line
+<n>dd - Delete N lines
+d$ - Delete to end of Line
+dG - Delete to end of File
+YY - Copy line
+<n>yy - Copy N lines
+p - paste
+                Down
+                  |   
+      Right<----h j K l --> Left
+                    |
+                    Up
+
